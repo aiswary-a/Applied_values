@@ -1,0 +1,180 @@
+---
+title: "Analysing Results of Questionnaire"
+author: "aiswary-a"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+# loading libraries
+library(pacman)
+pacman::p_load(tidyverse)
+
+```
+
+## 0) Cleaning the Data
+
+```{r}
+
+# insert CSV
+df <-
+  read_csv(
+    "C:/Users/aisro/Desktop/UNI/BSc CogSci - 2nd Sem/Applied/VSCode + Git/Form Responses/CogSci_Applied_Responses - Form responses 1_USINGFORCODEPREP.csv"
+  ) # to be updated with final data, this is just a placeholder
+
+# renaming the df columns
+## NOTE: [1] pre-tool usage, [2] post-tool usage, [char] textual response, [num] numerical response
+renaming_dfCols <-
+  c(
+    "timestamp",
+    "age",
+    "vote_eligibility",
+    "1_bias_perception",
+    "1_bias_awareness",
+    "1_morality",
+    "1_value_commitment",
+    "email",
+    "2_bias_perception",
+    "2_bias_awareness",
+    "2_morality",
+    "2_value_commitment",
+    "char_engagement",
+    "num_decision_enjoyment",
+    "num_likely_to_recommend",
+    "num_ranking_agreement",
+    "char_ranking_selfperception",
+    "char_past_candidate_test",
+    "char_future_candidate_test",
+    "char_comment_tool_selfperception",
+    "char_comment_tool_design",
+    "char_comment_other",
+    "gender",
+    "empty"
+  )
+
+colnames(df) <- renaming_dfCols
+
+# deleting email column
+df <- df %>%
+  select(-email, -empty)
+
+# removing first (test) row
+df <- df[df$timestamp != "16/04/2024 14:07:03",]
+
+# making all text in df lowercase
+df <- df %>%
+  mutate(
+    vote_eligibility = tolower(vote_eligibility),
+    char_engagement = tolower(char_engagement),
+    char_ranking_selfperception = tolower(char_engagement),
+    char_past_candidate_test = tolower(char_past_candidate_test),
+    char_future_candidate_test = tolower(char_future_candidate_test),
+    char_comment_tool_selfperception = tolower(char_comment_tool_selfperception),
+    char_comment_tool_design = tolower(char_comment_tool_design),
+    char_comment_other = tolower(char_comment_other),
+    gender = tolower(gender)
+  )
+
+```
+
+
+## 1) Demographics
+
+```{r}
+
+print(paste("N =", nrow(df)))
+
+# age distribution
+stats_dfAge <- df %>%
+  summarise(mean = mean(age), sd = sd(age)) # insert age column
+
+print(paste("The mean age of the sample:", round(stats_dfAge$mean, digits = 3)))
+print(paste("The SD of the age of the sample:", round(stats_dfAge$sd, digits = 3)))
+
+# gender distribution
+stats_dfGender <- df %>% 
+  count(gender) # insert gender column
+
+print(paste("The gender distribution of the sample:", stats_dfGender))
+
+```
+
+## 2) Pre-Tool vs. Post-Tool Usage
+
+```{r}
+
+# paired t-Tests comparing pre-tool and post-tool usage !
+
+# bias perception
+ttest_dfBiasPerception <- t.test(
+  df$`1_bias_perception`,
+  df$`2_bias_perception`,
+  paired = TRUE,
+  alternative = "two.sided"
+)
+
+ttest_dfBiasPerception
+
+ifelse(
+  ttest_dfBiasPerception$p.value > 0.05,
+  "Fail to reject null hypothesis that there is a significant difference between the groups",
+  "Reject the null hypothesis that there is a significant difference between the groups"
+)
+
+# bias awareness
+ttest_dfBiasAwareness <- t.test(
+  df$`1_bias_awareness`,
+  df$`2_bias_awareness`,
+  paired = TRUE,
+  alternative = "two.sided"
+)
+
+ttest_dfBiasAwareness
+
+ifelse(
+  ttest_dfBiasAwareness$p.value > 0.05,
+  "Fail to reject null hypothesis that there is a significant difference between the groups",
+  "Reject the null hypothesis that there is a significant difference between the groups"
+)
+
+# morality
+ttest_dfMorality <- t.test(
+  df$`1_morality`,
+  df$`2_morality`,
+  paired = TRUE,
+  alternative = "two.sided"
+)
+
+ttest_dfMorality
+
+ifelse(
+  ttest_dfMorality$p.value > 0.05,
+  "Fail to reject null hypothesis that there is a significant difference between the groups",
+  "Reject the null hypothesis that there is a significant difference between the groups"
+)
+
+# value commitment
+ttest_dfCommitment <- t.test(
+  df$`1_value_commitment`,
+  df$`2_value_commitment`,
+  paired = TRUE,
+  alternative = "two.sided"
+)
+
+ttest_dfCommitment
+
+ifelse(
+  ttest_dfCommitment$p.value > 0.05,
+  "Fail to reject null hypothesis that there is a significant difference between the groups",
+  "Reject the null hypothesis that there is a significant difference between the groups"
+)
+
+```
+
