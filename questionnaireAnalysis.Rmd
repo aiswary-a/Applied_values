@@ -21,7 +21,7 @@ pacman::p_load(tidyverse)
 
 ## 0) Cleaning the Data
 
-```{r}
+```{r, message = FALSE}
 
 # insert CSV
 df <-
