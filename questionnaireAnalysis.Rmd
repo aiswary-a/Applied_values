@@ -19,7 +19,7 @@ pacman::p_load(tidyverse)
 
 ```
 
-## 0) Cleaning the Data
+## 0. Cleaning the Data
 
 ```{r, message = FALSE}
 
@@ -85,7 +85,7 @@ df <- df %>%
 ```
 
 
-## 1) Demographics
+## 1. Demographics
 
 ```{r}
 
@@ -106,7 +106,86 @@ print(paste("The gender distribution of the sample:", stats_dfGender))
 
 ```
 
-## 2) Pre-Tool vs. Post-Tool Usage
+## 2. Pre-Tool vs. Post-Tool Usage
+
+### 2.1. Checking Assumptions
+#### a. Normality
+```{r}
+
+# normality testing
+
+norm_dfBiasPerception_1 <- shapiro.test(df$`1_bias_perception`)
+
+ifelse(
+  norm_dfBiasPerception_1$p.value > 0.05,
+  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
+  "Reject the null hypothesis that data significantly differs from a normal distribution"
+)
+
+norm_dfBiasPerception_2 <- shapiro.test(df$`2_bias_perception`)
+
+ifelse(
+  norm_dfBiasPerception_2$p.value > 0.05,
+  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
+  "Reject the null hypothesis that data significantly differs from a normal distribution"
+)
+
+norm_dfBiasAwareness_1 <- shapiro.test(df$`1_bias_awareness`)
+
+ifelse(
+  norm_dfBiasAwareness_1$p.value > 0.05,
+  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
+  "Reject the null hypothesis that data significantly differs from a normal distribution"
+)
+
+norm_dfBiasAwareness_2 <- shapiro.test(df$`2_bias_awareness`)
+
+ifelse(
+  norm_dfBiasAwareness_2$p.value > 0.05,
+  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
+  "Reject the null hypothesis that data significantly differs from a normal distribution"
+)
+
+norm_dfMorality_1 <- shapiro.test(df$`1_morality`)
+
+ifelse(
+  norm_dfMorality_1$p.value > 0.05,
+  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
+  "Reject the null hypothesis that data significantly differs from a normal distribution"
+)
+
+norm_dfMorality_2 <- shapiro.test(df$`2_morality`)
+
+ifelse(
+  norm_dfMorality_2$p.value > 0.05,
+  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
+  "Reject the null hypothesis that data significantly differs from a normal distribution"
+)
+
+norm_dfCommitment_1 <- shapiro.test(df$`1_value_commitment`)
+
+ifelse(
+  norm_dfCommitment_1$p.value > 0.05,
+  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
+  "Reject the null hypothesis that data significantly differs from a normal distribution"
+)
+
+norm_dfCommitment_2 <- shapiro.test(df$`2_value_commitment`)
+
+ifelse(
+  norm_dfCommitment_2$p.value > 0.05,
+  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
+  "Reject the null hypothesis that data significantly differs from a normal distribution"
+)
+
+```
+### b. Homogeneity of Variance
+```{r}
+
+# code here :)
+
+```
+
 
 ```{r}
 

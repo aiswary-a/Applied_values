@@ -11,7 +11,7 @@
 
 <meta name="author" content="aiswary-a" />
 
-<meta name="date" content="2024-04-26" />
+<meta name="date" content="2024-04-27" />
 
 <title>Analysing Results of Questionnaire</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">Analysing Results of Questionnaire</h1>
 <h4 class="author">aiswary-a</h4>
-<h4 class="date">2024-04-26</h4>
+<h4 class="date">2024-04-27</h4>
 
 </div>
 
@@ -361,7 +361,7 @@ display: none;
 library(pacman)
 pacman::p_load(tidyverse)</code></pre>
 <div id="cleaning-the-data" class="section level2">
-<h2>0) Cleaning the Data</h2>
+<h2>0. Cleaning the Data</h2>
 <pre class="r"><code># insert CSV
 df &lt;-
   read_csv(
@@ -422,7 +422,7 @@ df &lt;- df %&gt;%
   )</code></pre>
 </div>
 <div id="demographics" class="section level2">
-<h2>1) Demographics</h2>
+<h2>1. Demographics</h2>
 <pre class="r"><code>print(paste(&quot;N =&quot;, nrow(df)))</code></pre>
 <pre><code>## [1] &quot;N = 15&quot;</code></pre>
 <pre class="r"><code># age distribution
@@ -442,7 +442,82 @@ print(paste(&quot;The gender distribution of the sample:&quot;, stats_dfGender))
 ## [2] &quot;The gender distribution of the sample: c(9, 6)&quot;</code></pre>
 </div>
 <div id="pre-tool-vs.-post-tool-usage" class="section level2">
-<h2>2) Pre-Tool vs. Post-Tool Usage</h2>
+<h2>2. Pre-Tool vs. Post-Tool Usage</h2>
+<div id="checking-assumptions" class="section level3">
+<h3>2.1. Checking Assumptions</h3>
+<div id="a.-normality" class="section level4">
+<h4>a. Normality</h4>
+<pre class="r"><code># normality testing
+
+norm_dfBiasPerception_1 &lt;- shapiro.test(df$`1_bias_perception`)
+
+ifelse(
+  norm_dfBiasPerception_1$p.value &gt; 0.05,
+  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
+  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
+)</code></pre>
+<pre><code>## [1] &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
+<pre class="r"><code>norm_dfBiasPerception_2 &lt;- shapiro.test(df$`2_bias_perception`)
+
+ifelse(
+  norm_dfBiasPerception_2$p.value &gt; 0.05,
+  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
+  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
+)</code></pre>
+<pre><code>## [1] &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
+<pre class="r"><code>norm_dfBiasAwareness_1 &lt;- shapiro.test(df$`1_bias_awareness`)
+
+ifelse(
+  norm_dfBiasAwareness_1$p.value &gt; 0.05,
+  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
+  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
+)</code></pre>
+<pre><code>## [1] &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
+<pre class="r"><code>norm_dfBiasAwareness_2 &lt;- shapiro.test(df$`2_bias_awareness`)
+
+ifelse(
+  norm_dfBiasAwareness_2$p.value &gt; 0.05,
+  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
+  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
+)</code></pre>
+<pre><code>## [1] &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
+<pre class="r"><code>norm_dfMorality_1 &lt;- shapiro.test(df$`1_morality`)
+
+ifelse(
+  norm_dfMorality_1$p.value &gt; 0.05,
+  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
+  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
+)</code></pre>
+<pre><code>## [1] &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
+<pre class="r"><code>norm_dfMorality_2 &lt;- shapiro.test(df$`2_morality`)
+
+ifelse(
+  norm_dfMorality_2$p.value &gt; 0.05,
+  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
+  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
+)</code></pre>
+<pre><code>## [1] &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
+<pre class="r"><code>norm_dfCommitment_1 &lt;- shapiro.test(df$`1_value_commitment`)
+
+ifelse(
+  norm_dfCommitment_1$p.value &gt; 0.05,
+  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
+  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
+)</code></pre>
+<pre><code>## [1] &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
+<pre class="r"><code>norm_dfCommitment_2 &lt;- shapiro.test(df$`2_value_commitment`)
+
+ifelse(
+  norm_dfCommitment_2$p.value &gt; 0.05,
+  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
+  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
+)</code></pre>
+<pre><code>## [1] &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
+</div>
+</div>
+<div id="b.-homogeneity-of-variance" class="section level3">
+<h3>b. Homogeneity of Variance</h3>
+<pre class="r"><code># code here :)</code></pre>
 <pre class="r"><code># paired t-Tests comparing pre-tool and post-tool usage !
 
 # bias perception
@@ -549,6 +624,7 @@ ttest_dfCommitment</code></pre>
   &quot;Reject the null hypothesis that there is a significant difference between the groups&quot;
 )</code></pre>
 <pre><code>## [1] &quot;Fail to reject null hypothesis that there is a significant difference between the groups&quot;</code></pre>
+</div>
 </div>
 
 
