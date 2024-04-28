@@ -1,16 +1,21 @@
 ---
 title: "Analysing Results of Questionnaire"
 author: "aiswary-a"
-date: "`r Sys.Date()`"
-output:
-  html_document: default
-  pdf_document: default
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output: 
+  pdf_document:
+    toc: TRUE
+  html_document:
+    toc: TRUE
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 0. Data Prep
+## 0.1. Workspace Prep
 ```{r}
 
 # loading libraries
@@ -20,7 +25,7 @@ pacman::p_load(tidyverse,
 
 ```
 
-## 0. Cleaning the Data + General Data Prep
+## 0.2. Cleaning the Data
 
 ```{r, message = FALSE}
 
@@ -104,7 +109,7 @@ groupPairs <- list(
 ```
 
 
-## 1. Demographics
+# 1. Demographics
 
 ```{r}
 
@@ -125,10 +130,10 @@ print(paste("The gender distribution of the sample:", stats_dfGender))
 
 ```
 
-## 2. Pre-Tool vs. Post-Tool Usage
+# 2. Pre-Tool vs. Post-Tool Usage
 
-### 2.1. Checking Assumptions
-#### a. Normality
+## 2.1. Checking Assumptions
+### a. Normality
 ```{r}
 
 # Shapiro-Wilk test for Normality!
@@ -221,7 +226,8 @@ for (pair in groupPairs) {
 
 ```
 
-
+## 2.2. Stat. Testing!
+### a. Paired t-Test
 ```{r}
 
 # paired t-Tests comparing pre-tool and post-tool usage !
@@ -260,7 +266,7 @@ for (pair in groupPairs) {
 ```
 
 
-## Unused Code I'm Too Paranoid to Delete
+# 3. Unused Code I'm Too Paranoid to Delete
 ```{r, message = FALSE}
 
 # making all text in df lowercase
