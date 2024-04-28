@@ -15,18 +15,19 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # loading libraries
 library(pacman)
-pacman::p_load(tidyverse)
+pacman::p_load(tidyverse,
+               car) # for accessing Levene's test
 
 ```
 
-## 0. Cleaning the Data
+## 0. Cleaning the Data + General Data Prep
 
 ```{r, message = FALSE}
 
 # insert CSV
 df <-
   read_csv(
-    "C:/Users/aisro/Desktop/UNI/BSc CogSci - 2nd Sem/Applied/VSCode + Git/Form Responses/CogSci_Applied_Responses - Form responses 1_USINGFORCODEPREP.csv"
+    "C:/Users/aisro/Desktop/UNI/BSc CogSci - 2nd Sem/Applied/VSCode + Git/Form Responses/CogSci_Applied_Responses - Form responses_USINGFORCODEPREP_1.csv"
   ) # to be updated with final data, this is just a placeholder
 
 # renaming the df columns
@@ -36,15 +37,15 @@ renaming_dfCols <-
     "timestamp",
     "age",
     "vote_eligibility",
-    "1_bias_perception",
-    "1_bias_awareness",
-    "1_morality",
-    "1_value_commitment",
+    "preTool_biasPerception",
+    "preTool_biasAwareness",
+    "preTool_morality",
+    "preTool_valueCommitment",
     "email",
-    "2_bias_perception",
-    "2_bias_awareness",
-    "2_morality",
-    "2_value_commitment",
+    "postTool_biasPerception",
+    "postTool_biasAwareness",
+    "postTool_morality",
+    "postTool_valueCommitment",
     "char_engagement",
     "num_decision_enjoyment",
     "num_likely_to_recommend",
@@ -68,19 +69,37 @@ df <- df %>%
 # removing first (test) row
 df <- df[df$timestamp != "16/04/2024 14:07:03",]
 
-# making all text in df lowercase
-df <- df %>%
-  mutate(
-    vote_eligibility = tolower(vote_eligibility),
-    char_engagement = tolower(char_engagement),
-    char_ranking_selfperception = tolower(char_engagement),
-    char_past_candidate_test = tolower(char_past_candidate_test),
-    char_future_candidate_test = tolower(char_future_candidate_test),
-    char_comment_tool_selfperception = tolower(char_comment_tool_selfperception),
-    char_comment_tool_design = tolower(char_comment_tool_design),
-    char_comment_other = tolower(char_comment_other),
-    gender = tolower(gender)
-  )
+# ID'ing non-numeric columnsss and making those all lowercase!
+df <- df %>% 
+  mutate_if(~ !is.numeric(.), tolower)
+
+```
+
+
+
+```{r}
+
+# groups for stat tests!
+
+# vars. of interest :))
+groupSingles <- c(
+  "preTool_biasPerception",
+  "postTool_biasPerception",
+  "preTool_biasAwareness",
+  "postTool_biasAwareness",
+  "preTool_morality",
+  "postTool_morality",
+  "preTool_valueCommitment",
+  "postTool_valueCommitment"
+)
+
+# defining the group pairings
+groupPairs <- list(
+  c("preTool_biasPerception", "postTool_biasPerception"),
+  c("preTool_biasAwareness", "postTool_biasAwareness"),
+  c("preTool_morality", "postTool_morality"),
+  c("preTool_valueCommitment", "postTool_valueCommitment")
+)
 
 ```
 
@@ -95,8 +114,8 @@ print(paste("N =", nrow(df)))
 stats_dfAge <- df %>%
   summarise(mean = mean(age), sd = sd(age)) # insert age column
 
-print(paste("The mean age of the sample:", round(stats_dfAge$mean, digits = 3)))
-print(paste("The SD of the age of the sample:", round(stats_dfAge$sd, digits = 3)))
+print(paste("The mean age:", round(stats_dfAge$mean, digits = 3)))
+print(paste("The SD of the age:", round(stats_dfAge$sd, digits = 3)))
 
 # gender distribution
 stats_dfGender <- df %>% 
@@ -112,77 +131,93 @@ print(paste("The gender distribution of the sample:", stats_dfGender))
 #### a. Normality
 ```{r}
 
-# normality testing
+# Shapiro-Wilk test for Normality!
 
-norm_dfBiasPerception_1 <- shapiro.test(df$`1_bias_perception`)
+stat_nResults <- list() # an empty list to store the results
 
-ifelse(
-  norm_dfBiasPerception_1$p.value > 0.05,
-  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
-  "Reject the null hypothesis that data significantly differs from a normal distribution"
-)
-
-norm_dfBiasPerception_2 <- shapiro.test(df$`2_bias_perception`)
-
-ifelse(
-  norm_dfBiasPerception_2$p.value > 0.05,
-  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
-  "Reject the null hypothesis that data significantly differs from a normal distribution"
-)
-
-norm_dfBiasAwareness_1 <- shapiro.test(df$`1_bias_awareness`)
-
-ifelse(
-  norm_dfBiasAwareness_1$p.value > 0.05,
-  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
-  "Reject the null hypothesis that data significantly differs from a normal distribution"
-)
-
-norm_dfBiasAwareness_2 <- shapiro.test(df$`2_bias_awareness`)
-
-ifelse(
-  norm_dfBiasAwareness_2$p.value > 0.05,
-  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
-  "Reject the null hypothesis that data significantly differs from a normal distribution"
-)
-
-norm_dfMorality_1 <- shapiro.test(df$`1_morality`)
-
-ifelse(
-  norm_dfMorality_1$p.value > 0.05,
-  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
-  "Reject the null hypothesis that data significantly differs from a normal distribution"
-)
-
-norm_dfMorality_2 <- shapiro.test(df$`2_morality`)
-
-ifelse(
-  norm_dfMorality_2$p.value > 0.05,
-  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
-  "Reject the null hypothesis that data significantly differs from a normal distribution"
-)
-
-norm_dfCommitment_1 <- shapiro.test(df$`1_value_commitment`)
-
-ifelse(
-  norm_dfCommitment_1$p.value > 0.05,
-  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
-  "Reject the null hypothesis that data significantly differs from a normal distribution"
-)
-
-norm_dfCommitment_2 <- shapiro.test(df$`2_value_commitment`)
-
-ifelse(
-  norm_dfCommitment_2$p.value > 0.05,
-  "Fail to reject null hypothesis that data significantly differs from a normal distribution",
-  "Reject the null hypothesis that data significantly differs from a normal distribution"
-)
+# normality testing for-loop, going through each indexed column
+for (i in seq_along(groupSingles)) {
+  single <- groupSingles[i]  # extract column name using index
+  
+  # taking the group and forcing it to numeric if necessary
+  item <-
+    as.numeric(df[[single]])
+  
+  # the Shapiro-Wilk normality test!
+  shapiro_result <-
+    shapiro.test(item)
+  
+  # storing the results
+  test_name <-
+    paste("Shapiro-Wilk Test of Normality for", single)
+  stat_nResults[[test_name]] <- shapiro_result
+  
+  # printing the result!
+  cat(test_name, ":\n")
+  print(shapiro_result)
+  
+  # performing the hypothesis test using results!
+  if (!is.null(shapiro_result$p.value) &&
+      shapiro_result$p.value > 0.05) {
+    cat(
+      "Fail to reject null hypothesis that data significantly differs from a normal distribution\n\n"
+    )
+  } else if (!is.null(shapiro_result$p.value) &&
+             shapiro_result$p.value <= 0.05) {
+    cat(
+      "Reject the null hypothesis that data significantly differs from a normal distribution\n\n"
+    )
+  } else {
+    cat("Unable to compute p-value for the test.\n\n")
+  }
+}
 
 ```
-### b. Homogeneity of Variance
-```{r}
 
-# code here :)
+### b. Homogeneity of Variance
+```{r, warning = FALSE}
+
+# Levene's test for homoscedasticity (homogeneity of variance)
+
+stat_lResults <- list() # empty list to store results
+
+# Levene's test for-loop, going through each indexed column
+for (pair in groupPairs) {
+  
+  # printing the pair to see the comparison
+  print(pair)
+  
+  # extracting the pair!
+  group1 <- df[[pair[1]]] # member no. 1 of pair!
+  group2 <- df[[pair[2]]] # member no. 2 of pair!
+  
+  # performing Levene's test
+  lResults <-
+    leveneTest(group1, group2) # funky naming to deal with overwriting issues :/
+  
+  # storing results in the pre-established list
+  test_name <- paste("Levene test between", pair[1], "and", pair[2])
+  stat_lResults[[test_name]] <- lResults
+  
+  # see the result!
+  cat(test_name, ":\n")
+  print(lResults)
+  
+  # performing the hypothesis test using results!
+  if (!is.null(lResults$`Pr(>F)`[1]) &&
+      lResults$`Pr(>F)`[1] > 0.05) {
+    cat(
+      "Fail to reject null hypothesis that there is no significant difference between the groups\n\n"
+    )
+  } else if (!is.null(lResults$`Pr(>F)`[1]) &&
+             lResults$`Pr(>F)`[1] <= 0.05) {
+    cat(
+      "Reject the null hypothesis that there is no significant difference between the groups\n\n"
+    )
+  } else {
+    cat("Unable to compute p-value for the test.\n\n")
+  }
+}
 
 ```
 
@@ -191,69 +226,64 @@ ifelse(
 
 # paired t-Tests comparing pre-tool and post-tool usage !
 
-# bias perception
-ttest_dfBiasPerception <- t.test(
-  df$`1_bias_perception`,
-  df$`2_bias_perception`,
-  paired = TRUE,
-  alternative = "two.sided"
-)
+stat_tResults <- list() # empty list to store the results
 
-ttest_dfBiasPerception
+# Paired t-Test for-loop, iterating through each indexed column
+for (pair in groupPairs) {
+  
+  # extracting the group pairs and performing numeric conversions where necessary
+  group1 <- as.numeric(c(df[[pair[1]]]))
+  group2 <- as.numeric(c(df[[pair[2]]]))
+  
+  # perfomring the paired t-test!
+  stat_tResults <- t.test(group1, group2, paired = TRUE,
+                          alternative = "two.sided")
+  
+  # storing the result in the pre-established list!
+  test_name <- paste("Paired t-test between", pair[1], "and", pair[2])
+  stat_tResults[[test_name]] <- stat_tResults
+  
+  # seeing the result of our lovely test!
+  cat(test_name, ":\n")
+  print(stat_tResults)
+  
+  # performing the hypothesis test using results!
+  if (!is.null(stat_tResults$p.value[1]) && stat_tResults$p.value[1] > 0.05) {
+    cat("Fail to reject null hypothesis that there is no significant difference between the groups\n\n")
+  } else if (!is.null(stat_tResults$p.value[1]) && stat_tResults$p.value[1] <= 0.05) {
+    cat("Reject the null hypothesis that there is no significant difference between the groups\n\n")
+  } else {
+    cat("Unable to compute p-value for the test.\n\n")
+  }
+}
 
-ifelse(
-  ttest_dfBiasPerception$p.value > 0.05,
-  "Fail to reject null hypothesis that there is a significant difference between the groups",
-  "Reject the null hypothesis that there is a significant difference between the groups"
-)
+```
 
-# bias awareness
-ttest_dfBiasAwareness <- t.test(
-  df$`1_bias_awareness`,
-  df$`2_bias_awareness`,
-  paired = TRUE,
-  alternative = "two.sided"
-)
 
-ttest_dfBiasAwareness
+## Unused Code I'm Too Paranoid to Delete
+```{r, message = FALSE}
 
-ifelse(
-  ttest_dfBiasAwareness$p.value > 0.05,
-  "Fail to reject null hypothesis that there is a significant difference between the groups",
-  "Reject the null hypothesis that there is a significant difference between the groups"
-)
+# making all text in df lowercase
+df <- df %>%
+  mutate(
+    vote_eligibility = tolower(vote_eligibility),
+    char_engagement = tolower(char_engagement),
+    char_ranking_selfperception = tolower(char_engagement),
+    char_past_candidate_test = tolower(char_past_candidate_test),
+    char_future_candidate_test = tolower(char_future_candidate_test),
+    char_comment_tool_selfperception = tolower(char_comment_tool_selfperception),
+    char_comment_tool_design = tolower(char_comment_tool_design),
+    char_comment_other = tolower(char_comment_other),
+    gender = tolower(gender)
+  )
 
-# morality
-ttest_dfMorality <- t.test(
-  df$`1_morality`,
-  df$`2_morality`,
-  paired = TRUE,
-  alternative = "two.sided"
-)
+# - - - - 
 
-ttest_dfMorality
-
-ifelse(
-  ttest_dfMorality$p.value > 0.05,
-  "Fail to reject null hypothesis that there is a significant difference between the groups",
-  "Reject the null hypothesis that there is a significant difference between the groups"
-)
-
-# value commitment
-ttest_dfCommitment <- t.test(
-  df$`1_value_commitment`,
-  df$`2_value_commitment`,
-  paired = TRUE,
-  alternative = "two.sided"
-)
-
-ttest_dfCommitment
-
-ifelse(
-  ttest_dfCommitment$p.value > 0.05,
-  "Fail to reject null hypothesis that there is a significant difference between the groups",
-  "Reject the null hypothesis that there is a significant difference between the groups"
-)
+# group pairings
+gr_dfBiasPerception <- c(df$preTool_biasPerception,df$postTool_biasPerception)
+gr_dfBiasAwareness <- c(df$preTool_biasAwareness, df$postTool_biasAwareness)
+gr_dfMorality <- c(df$preTool_morality, df$postTool_morality)
+gr_dfValCommitment <- c(df$preTool_valueCommitment, df$postTool_valueCommitment)
 
 ```
 

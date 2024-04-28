@@ -11,7 +11,7 @@
 
 <meta name="author" content="aiswary-a" />
 
-<meta name="date" content="2024-04-27" />
+<meta name="date" content="2024-04-28" />
 
 <title>Analysing Results of Questionnaire</title>
 
@@ -352,20 +352,21 @@ display: none;
 
 <h1 class="title toc-ignore">Analysing Results of Questionnaire</h1>
 <h4 class="author">aiswary-a</h4>
-<h4 class="date">2024-04-27</h4>
+<h4 class="date">2024-04-28</h4>
 
 </div>
 
 
 <pre class="r"><code># loading libraries
 library(pacman)
-pacman::p_load(tidyverse)</code></pre>
-<div id="cleaning-the-data" class="section level2">
-<h2>0. Cleaning the Data</h2>
+pacman::p_load(tidyverse,
+               car) # for accessing Levene&#39;s test</code></pre>
+<div id="cleaning-the-data-general-data-prep" class="section level2">
+<h2>0. Cleaning the Data + General Data Prep</h2>
 <pre class="r"><code># insert CSV
 df &lt;-
   read_csv(
-    &quot;C:/Users/aisro/Desktop/UNI/BSc CogSci - 2nd Sem/Applied/VSCode + Git/Form Responses/CogSci_Applied_Responses - Form responses 1_USINGFORCODEPREP.csv&quot;
+    &quot;C:/Users/aisro/Desktop/UNI/BSc CogSci - 2nd Sem/Applied/VSCode + Git/Form Responses/CogSci_Applied_Responses - Form responses_USINGFORCODEPREP_1.csv&quot;
   ) # to be updated with final data, this is just a placeholder
 
 # renaming the df columns
@@ -375,15 +376,15 @@ renaming_dfCols &lt;-
     &quot;timestamp&quot;,
     &quot;age&quot;,
     &quot;vote_eligibility&quot;,
-    &quot;1_bias_perception&quot;,
-    &quot;1_bias_awareness&quot;,
-    &quot;1_morality&quot;,
-    &quot;1_value_commitment&quot;,
+    &quot;preTool_biasPerception&quot;,
+    &quot;preTool_biasAwareness&quot;,
+    &quot;preTool_morality&quot;,
+    &quot;preTool_valueCommitment&quot;,
     &quot;email&quot;,
-    &quot;2_bias_perception&quot;,
-    &quot;2_bias_awareness&quot;,
-    &quot;2_morality&quot;,
-    &quot;2_value_commitment&quot;,
+    &quot;postTool_biasPerception&quot;,
+    &quot;postTool_biasAwareness&quot;,
+    &quot;postTool_morality&quot;,
+    &quot;postTool_valueCommitment&quot;,
     &quot;char_engagement&quot;,
     &quot;num_decision_enjoyment&quot;,
     &quot;num_likely_to_recommend&quot;,
@@ -407,7 +408,342 @@ df &lt;- df %&gt;%
 # removing first (test) row
 df &lt;- df[df$timestamp != &quot;16/04/2024 14:07:03&quot;,]
 
-# making all text in df lowercase
+# ID&#39;ing non-numeric columnsss and making those all lowercase!
+df &lt;- df %&gt;% 
+  mutate_if(~ !is.numeric(.), tolower)</code></pre>
+<pre class="r"><code># groups for stat tests!
+
+# vars. of interest :))
+groupSingles &lt;- c(
+  &quot;preTool_biasPerception&quot;,
+  &quot;postTool_biasPerception&quot;,
+  &quot;preTool_biasAwareness&quot;,
+  &quot;postTool_biasAwareness&quot;,
+  &quot;preTool_morality&quot;,
+  &quot;postTool_morality&quot;,
+  &quot;preTool_valueCommitment&quot;,
+  &quot;postTool_valueCommitment&quot;
+)
+
+# defining the group pairings
+groupPairs &lt;- list(
+  c(&quot;preTool_biasPerception&quot;, &quot;postTool_biasPerception&quot;),
+  c(&quot;preTool_biasAwareness&quot;, &quot;postTool_biasAwareness&quot;),
+  c(&quot;preTool_morality&quot;, &quot;postTool_morality&quot;),
+  c(&quot;preTool_valueCommitment&quot;, &quot;postTool_valueCommitment&quot;)
+)</code></pre>
+</div>
+<div id="demographics" class="section level2">
+<h2>1. Demographics</h2>
+<pre class="r"><code>print(paste(&quot;N =&quot;, nrow(df)))</code></pre>
+<pre><code>## [1] &quot;N = 16&quot;</code></pre>
+<pre class="r"><code># age distribution
+stats_dfAge &lt;- df %&gt;%
+  summarise(mean = mean(age), sd = sd(age)) # insert age column
+
+print(paste(&quot;The mean age:&quot;, round(stats_dfAge$mean, digits = 3)))</code></pre>
+<pre><code>## [1] &quot;The mean age: 28.438&quot;</code></pre>
+<pre class="r"><code>print(paste(&quot;The SD of the age:&quot;, round(stats_dfAge$sd, digits = 3)))</code></pre>
+<pre><code>## [1] &quot;The SD of the age: 14.278&quot;</code></pre>
+<pre class="r"><code># gender distribution
+stats_dfGender &lt;- df %&gt;% 
+  count(gender) # insert gender column
+
+print(paste(&quot;The gender distribution of the sample:&quot;, stats_dfGender))</code></pre>
+<pre><code>## [1] &quot;The gender distribution of the sample: c(\&quot;female\&quot;, \&quot;male\&quot;)&quot;
+## [2] &quot;The gender distribution of the sample: c(9, 7)&quot;</code></pre>
+</div>
+<div id="pre-tool-vs.-post-tool-usage" class="section level2">
+<h2>2. Pre-Tool vs. Post-Tool Usage</h2>
+<div id="checking-assumptions" class="section level3">
+<h3>2.1. Checking Assumptions</h3>
+<div id="a.-normality" class="section level4">
+<h4>a. Normality</h4>
+<pre class="r"><code># Shapiro-Wilk test for Normality!
+
+stat_nResults &lt;- list() # an empty list to store the results
+
+# normality testing for-loop, going through each indexed column
+for (i in seq_along(groupSingles)) {
+  single &lt;- groupSingles[i]  # extract column name using index
+  
+  # taking the group and forcing it to numeric if necessary
+  item &lt;-
+    as.numeric(df[[single]])
+  
+  # the Shapiro-Wilk normality test!
+  shapiro_result &lt;-
+    shapiro.test(item)
+  
+  # storing the results
+  test_name &lt;-
+    paste(&quot;Shapiro-Wilk Test of Normality for&quot;, single)
+  stat_nResults[[test_name]] &lt;- shapiro_result
+  
+  # printing the result!
+  cat(test_name, &quot;:\n&quot;)
+  print(shapiro_result)
+  
+  # performing the hypothesis test using results!
+  if (!is.null(shapiro_result$p.value) &amp;&amp;
+      shapiro_result$p.value &gt; 0.05) {
+    cat(
+      &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution\n\n&quot;
+    )
+  } else if (!is.null(shapiro_result$p.value) &amp;&amp;
+             shapiro_result$p.value &lt;= 0.05) {
+    cat(
+      &quot;Reject the null hypothesis that data significantly differs from a normal distribution\n\n&quot;
+    )
+  } else {
+    cat(&quot;Unable to compute p-value for the test.\n\n&quot;)
+  }
+}</code></pre>
+<pre><code>## Shapiro-Wilk Test of Normality for preTool_biasPerception :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  item
+## W = 0.8929, p-value = 0.06192
+## 
+## Fail to reject null hypothesis that data significantly differs from a normal distribution
+## 
+## Shapiro-Wilk Test of Normality for postTool_biasPerception :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  item
+## W = 0.92252, p-value = 0.2104
+## 
+## Fail to reject null hypothesis that data significantly differs from a normal distribution
+## 
+## Shapiro-Wilk Test of Normality for preTool_biasAwareness :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  item
+## W = 0.9227, p-value = 0.1864
+## 
+## Fail to reject null hypothesis that data significantly differs from a normal distribution
+## 
+## Shapiro-Wilk Test of Normality for postTool_biasAwareness :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  item
+## W = 0.95996, p-value = 0.6917
+## 
+## Fail to reject null hypothesis that data significantly differs from a normal distribution
+## 
+## Shapiro-Wilk Test of Normality for preTool_morality :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  item
+## W = 0.80769, p-value = 0.003452
+## 
+## Reject the null hypothesis that data significantly differs from a normal distribution
+## 
+## Shapiro-Wilk Test of Normality for postTool_morality :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  item
+## W = 0.79027, p-value = 0.002765
+## 
+## Reject the null hypothesis that data significantly differs from a normal distribution
+## 
+## Shapiro-Wilk Test of Normality for preTool_valueCommitment :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  item
+## W = 0.9269, p-value = 0.2176
+## 
+## Fail to reject null hypothesis that data significantly differs from a normal distribution
+## 
+## Shapiro-Wilk Test of Normality for postTool_valueCommitment :
+## 
+##  Shapiro-Wilk normality test
+## 
+## data:  item
+## W = 0.88253, p-value = 0.05176
+## 
+## Fail to reject null hypothesis that data significantly differs from a normal distribution</code></pre>
+</div>
+</div>
+<div id="b.-homogeneity-of-variance" class="section level3">
+<h3>b. Homogeneity of Variance</h3>
+<pre class="r"><code># Levene&#39;s test for homoscedasticity (homogeneity of variance)
+
+stat_lResults &lt;- list() # empty list to store results
+
+# Levene&#39;s test for-loop, going through each indexed column
+for (pair in groupPairs) {
+  
+  # printing the pair to see the comparison
+  print(pair)
+  
+  # extracting the pair!
+  group1 &lt;- df[[pair[1]]] # member no. 1 of pair!
+  group2 &lt;- df[[pair[2]]] # member no. 2 of pair!
+  
+  # performing Levene&#39;s test
+  lResults &lt;-
+    leveneTest(group1, group2) # funky naming to deal with overwriting issues :/
+  
+  # storing results in the pre-established list
+  test_name &lt;- paste(&quot;Levene test between&quot;, pair[1], &quot;and&quot;, pair[2])
+  stat_lResults[[test_name]] &lt;- lResults
+  
+  # see the result!
+  cat(test_name, &quot;:\n&quot;)
+  print(lResults)
+  
+  # performing the hypothesis test using results!
+  if (!is.null(lResults$`Pr(&gt;F)`[1]) &amp;&amp;
+      lResults$`Pr(&gt;F)`[1] &gt; 0.05) {
+    cat(
+      &quot;Fail to reject null hypothesis that there is no significant difference between the groups\n\n&quot;
+    )
+  } else if (!is.null(lResults$`Pr(&gt;F)`[1]) &amp;&amp;
+             lResults$`Pr(&gt;F)`[1] &lt;= 0.05) {
+    cat(
+      &quot;Reject the null hypothesis that there is no significant difference between the groups\n\n&quot;
+    )
+  } else {
+    cat(&quot;Unable to compute p-value for the test.\n\n&quot;)
+  }
+}</code></pre>
+<pre><code>## [1] &quot;preTool_biasPerception&quot;  &quot;postTool_biasPerception&quot;
+## Levene test between preTool_biasPerception and postTool_biasPerception :
+## Levene&#39;s Test for Homogeneity of Variance (center = median)
+##       Df F value   Pr(&gt;F)   
+## group  5    8.85 0.002778 **
+##        9                    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## Reject the null hypothesis that there is no significant difference between the groups
+## 
+## [1] &quot;preTool_biasAwareness&quot;  &quot;postTool_biasAwareness&quot;
+## Levene test between preTool_biasAwareness and postTool_biasAwareness :
+## Levene&#39;s Test for Homogeneity of Variance (center = median)
+##       Df F value Pr(&gt;F)
+## group  5  0.5551 0.7322
+##        9               
+## Fail to reject null hypothesis that there is no significant difference between the groups
+## 
+## [1] &quot;preTool_morality&quot;  &quot;postTool_morality&quot;
+## Levene test between preTool_morality and postTool_morality :
+## Levene&#39;s Test for Homogeneity of Variance (center = median)
+##       Df F value Pr(&gt;F)
+## group  2  1.5364 0.2546
+##       12               
+## Fail to reject null hypothesis that there is no significant difference between the groups
+## 
+## [1] &quot;preTool_valueCommitment&quot;  &quot;postTool_valueCommitment&quot;
+## Levene test between preTool_valueCommitment and postTool_valueCommitment :
+## Levene&#39;s Test for Homogeneity of Variance (center = median)
+##       Df F value Pr(&gt;F)
+## group  3  0.3847 0.7662
+##       11               
+## Fail to reject null hypothesis that there is no significant difference between the groups</code></pre>
+<pre class="r"><code># paired t-Tests comparing pre-tool and post-tool usage !
+
+stat_tResults &lt;- list() # empty list to store the results
+
+# Paired t-Test for-loop, iterating through each indexed column
+for (pair in groupPairs) {
+  
+  # extracting the group pairs and performing numeric conversions where necessary
+  group1 &lt;- as.numeric(c(df[[pair[1]]]))
+  group2 &lt;- as.numeric(c(df[[pair[2]]]))
+  
+  # perfomring the paired t-test!
+  stat_tResults &lt;- t.test(group1, group2, paired = TRUE,
+                          alternative = &quot;two.sided&quot;)
+  
+  # storing the result in the pre-established list!
+  test_name &lt;- paste(&quot;Paired t-test between&quot;, pair[1], &quot;and&quot;, pair[2])
+  stat_tResults[[test_name]] &lt;- stat_tResults
+  
+  # seeing the result of our lovely test!
+  cat(test_name, &quot;:\n&quot;)
+  print(stat_tResults)
+  
+  # performing the hypothesis test using results!
+  if (!is.null(stat_tResults$p.value[1]) &amp;&amp; stat_tResults$p.value[1] &gt; 0.05) {
+    cat(&quot;Fail to reject null hypothesis that there is no significant difference between the groups\n\n&quot;)
+  } else if (!is.null(stat_tResults$p.value[1]) &amp;&amp; stat_tResults$p.value[1] &lt;= 0.05) {
+    cat(&quot;Reject the null hypothesis that there is no significant difference between the groups\n\n&quot;)
+  } else {
+    cat(&quot;Unable to compute p-value for the test.\n\n&quot;)
+  }
+}</code></pre>
+<pre><code>## Paired t-test between preTool_biasPerception and postTool_biasPerception :
+## 
+##  Paired t-test
+## 
+## data:  group1 and group2
+## t = -1.8353, df = 14, p-value = 0.08779
+## alternative hypothesis: true mean difference is not equal to 0
+## 95 percent confidence interval:
+##  -1.15659390  0.08992723
+## sample estimates:
+## mean difference 
+##      -0.5333333 
+## 
+## Fail to reject null hypothesis that there is no significant difference between the groups
+## 
+## Paired t-test between preTool_biasAwareness and postTool_biasAwareness :
+## 
+##  Paired t-test
+## 
+## data:  group1 and group2
+## t = -1.526, df = 14, p-value = 0.1493
+## alternative hypothesis: true mean difference is not equal to 0
+## 95 percent confidence interval:
+##  -2.084746  0.351413
+## sample estimates:
+## mean difference 
+##      -0.8666667 
+## 
+## Fail to reject null hypothesis that there is no significant difference between the groups
+## 
+## Paired t-test between preTool_morality and postTool_morality :
+## 
+##  Paired t-test
+## 
+## data:  group1 and group2
+## t = 0.32323, df = 14, p-value = 0.7513
+## alternative hypothesis: true mean difference is not equal to 0
+## 95 percent confidence interval:
+##  -0.3756988  0.5090321
+## sample estimates:
+## mean difference 
+##      0.06666667 
+## 
+## Fail to reject null hypothesis that there is no significant difference between the groups
+## 
+## Paired t-test between preTool_valueCommitment and postTool_valueCommitment :
+## 
+##  Paired t-test
+## 
+## data:  group1 and group2
+## t = 1.5718, df = 14, p-value = 0.1383
+## alternative hypothesis: true mean difference is not equal to 0
+## 95 percent confidence interval:
+##  -0.145813  0.945813
+## sample estimates:
+## mean difference 
+##             0.4 
+## 
+## Fail to reject null hypothesis that there is no significant difference between the groups</code></pre>
+</div>
+</div>
+<div id="unused-code-im-too-paranoid-to-delete" class="section level2">
+<h2>Unused Code I’m Too Paranoid to Delete</h2>
+<pre class="r"><code># making all text in df lowercase
 df &lt;- df %&gt;%
   mutate(
     vote_eligibility = tolower(vote_eligibility),
@@ -419,212 +755,15 @@ df &lt;- df %&gt;%
     char_comment_tool_design = tolower(char_comment_tool_design),
     char_comment_other = tolower(char_comment_other),
     gender = tolower(gender)
-  )</code></pre>
-</div>
-<div id="demographics" class="section level2">
-<h2>1. Demographics</h2>
-<pre class="r"><code>print(paste(&quot;N =&quot;, nrow(df)))</code></pre>
-<pre><code>## [1] &quot;N = 15&quot;</code></pre>
-<pre class="r"><code># age distribution
-stats_dfAge &lt;- df %&gt;%
-  summarise(mean = mean(age), sd = sd(age)) # insert age column
+  )
 
-print(paste(&quot;The mean age of the sample:&quot;, round(stats_dfAge$mean, digits = 3)))</code></pre>
-<pre><code>## [1] &quot;The mean age of the sample: 28.867&quot;</code></pre>
-<pre class="r"><code>print(paste(&quot;The SD of the age of the sample:&quot;, round(stats_dfAge$sd, digits = 3)))</code></pre>
-<pre><code>## [1] &quot;The SD of the age of the sample: 14.672&quot;</code></pre>
-<pre class="r"><code># gender distribution
-stats_dfGender &lt;- df %&gt;% 
-  count(gender) # insert gender column
+# - - - - 
 
-print(paste(&quot;The gender distribution of the sample:&quot;, stats_dfGender))</code></pre>
-<pre><code>## [1] &quot;The gender distribution of the sample: c(\&quot;female\&quot;, \&quot;male\&quot;)&quot;
-## [2] &quot;The gender distribution of the sample: c(9, 6)&quot;</code></pre>
-</div>
-<div id="pre-tool-vs.-post-tool-usage" class="section level2">
-<h2>2. Pre-Tool vs. Post-Tool Usage</h2>
-<div id="checking-assumptions" class="section level3">
-<h3>2.1. Checking Assumptions</h3>
-<div id="a.-normality" class="section level4">
-<h4>a. Normality</h4>
-<pre class="r"><code># normality testing
-
-norm_dfBiasPerception_1 &lt;- shapiro.test(df$`1_bias_perception`)
-
-ifelse(
-  norm_dfBiasPerception_1$p.value &gt; 0.05,
-  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
-  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
-)</code></pre>
-<pre><code>## [1] &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
-<pre class="r"><code>norm_dfBiasPerception_2 &lt;- shapiro.test(df$`2_bias_perception`)
-
-ifelse(
-  norm_dfBiasPerception_2$p.value &gt; 0.05,
-  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
-  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
-)</code></pre>
-<pre><code>## [1] &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
-<pre class="r"><code>norm_dfBiasAwareness_1 &lt;- shapiro.test(df$`1_bias_awareness`)
-
-ifelse(
-  norm_dfBiasAwareness_1$p.value &gt; 0.05,
-  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
-  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
-)</code></pre>
-<pre><code>## [1] &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
-<pre class="r"><code>norm_dfBiasAwareness_2 &lt;- shapiro.test(df$`2_bias_awareness`)
-
-ifelse(
-  norm_dfBiasAwareness_2$p.value &gt; 0.05,
-  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
-  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
-)</code></pre>
-<pre><code>## [1] &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
-<pre class="r"><code>norm_dfMorality_1 &lt;- shapiro.test(df$`1_morality`)
-
-ifelse(
-  norm_dfMorality_1$p.value &gt; 0.05,
-  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
-  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
-)</code></pre>
-<pre><code>## [1] &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
-<pre class="r"><code>norm_dfMorality_2 &lt;- shapiro.test(df$`2_morality`)
-
-ifelse(
-  norm_dfMorality_2$p.value &gt; 0.05,
-  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
-  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
-)</code></pre>
-<pre><code>## [1] &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
-<pre class="r"><code>norm_dfCommitment_1 &lt;- shapiro.test(df$`1_value_commitment`)
-
-ifelse(
-  norm_dfCommitment_1$p.value &gt; 0.05,
-  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
-  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
-)</code></pre>
-<pre><code>## [1] &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
-<pre class="r"><code>norm_dfCommitment_2 &lt;- shapiro.test(df$`2_value_commitment`)
-
-ifelse(
-  norm_dfCommitment_2$p.value &gt; 0.05,
-  &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;,
-  &quot;Reject the null hypothesis that data significantly differs from a normal distribution&quot;
-)</code></pre>
-<pre><code>## [1] &quot;Fail to reject null hypothesis that data significantly differs from a normal distribution&quot;</code></pre>
-</div>
-</div>
-<div id="b.-homogeneity-of-variance" class="section level3">
-<h3>b. Homogeneity of Variance</h3>
-<pre class="r"><code># code here :)</code></pre>
-<pre class="r"><code># paired t-Tests comparing pre-tool and post-tool usage !
-
-# bias perception
-ttest_dfBiasPerception &lt;- t.test(
-  df$`1_bias_perception`,
-  df$`2_bias_perception`,
-  paired = TRUE,
-  alternative = &quot;two.sided&quot;
-)
-
-ttest_dfBiasPerception</code></pre>
-<pre><code>## 
-##  Paired t-test
-## 
-## data:  df$`1_bias_perception` and df$`2_bias_perception`
-## t = -1.8466, df = 13, p-value = 0.08769
-## alternative hypothesis: true mean difference is not equal to 0
-## 95 percent confidence interval:
-##  -1.23996191  0.09710477
-## sample estimates:
-## mean difference 
-##      -0.5714286</code></pre>
-<pre class="r"><code>ifelse(
-  ttest_dfBiasPerception$p.value &gt; 0.05,
-  &quot;Fail to reject null hypothesis that there is a significant difference between the groups&quot;,
-  &quot;Reject the null hypothesis that there is a significant difference between the groups&quot;
-)</code></pre>
-<pre><code>## [1] &quot;Fail to reject null hypothesis that there is a significant difference between the groups&quot;</code></pre>
-<pre class="r"><code># bias awareness
-ttest_dfBiasAwareness &lt;- t.test(
-  df$`1_bias_awareness`,
-  df$`2_bias_awareness`,
-  paired = TRUE,
-  alternative = &quot;two.sided&quot;
-)
-
-ttest_dfBiasAwareness</code></pre>
-<pre><code>## 
-##  Paired t-test
-## 
-## data:  df$`1_bias_awareness` and df$`2_bias_awareness`
-## t = -1.5312, df = 13, p-value = 0.1497
-## alternative hypothesis: true mean difference is not equal to 0
-## 95 percent confidence interval:
-##  -2.238652  0.381509
-## sample estimates:
-## mean difference 
-##      -0.9285714</code></pre>
-<pre class="r"><code>ifelse(
-  ttest_dfBiasAwareness$p.value &gt; 0.05,
-  &quot;Fail to reject null hypothesis that there is a significant difference between the groups&quot;,
-  &quot;Reject the null hypothesis that there is a significant difference between the groups&quot;
-)</code></pre>
-<pre><code>## [1] &quot;Fail to reject null hypothesis that there is a significant difference between the groups&quot;</code></pre>
-<pre class="r"><code># morality
-ttest_dfMorality &lt;- t.test(
-  df$`1_morality`,
-  df$`2_morality`,
-  paired = TRUE,
-  alternative = &quot;two.sided&quot;
-)
-
-ttest_dfMorality</code></pre>
-<pre><code>## 
-##  Paired t-test
-## 
-## data:  df$`1_morality` and df$`2_morality`
-## t = 0.32249, df = 13, p-value = 0.7522
-## alternative hypothesis: true mean difference is not equal to 0
-## 95 percent confidence interval:
-##  -0.4070728  0.5499299
-## sample estimates:
-## mean difference 
-##      0.07142857</code></pre>
-<pre class="r"><code>ifelse(
-  ttest_dfMorality$p.value &gt; 0.05,
-  &quot;Fail to reject null hypothesis that there is a significant difference between the groups&quot;,
-  &quot;Reject the null hypothesis that there is a significant difference between the groups&quot;
-)</code></pre>
-<pre><code>## [1] &quot;Fail to reject null hypothesis that there is a significant difference between the groups&quot;</code></pre>
-<pre class="r"><code># value commitment
-ttest_dfCommitment &lt;- t.test(
-  df$`1_value_commitment`,
-  df$`2_value_commitment`,
-  paired = TRUE,
-  alternative = &quot;two.sided&quot;
-)
-
-ttest_dfCommitment</code></pre>
-<pre><code>## 
-##  Paired t-test
-## 
-## data:  df$`1_value_commitment` and df$`2_value_commitment`
-## t = 1.5778, df = 13, p-value = 0.1386
-## alternative hypothesis: true mean difference is not equal to 0
-## 95 percent confidence interval:
-##  -0.1582515  1.0153944
-## sample estimates:
-## mean difference 
-##       0.4285714</code></pre>
-<pre class="r"><code>ifelse(
-  ttest_dfCommitment$p.value &gt; 0.05,
-  &quot;Fail to reject null hypothesis that there is a significant difference between the groups&quot;,
-  &quot;Reject the null hypothesis that there is a significant difference between the groups&quot;
-)</code></pre>
-<pre><code>## [1] &quot;Fail to reject null hypothesis that there is a significant difference between the groups&quot;</code></pre>
-</div>
+# group pairings
+gr_dfBiasPerception &lt;- c(df$preTool_biasPerception,df$postTool_biasPerception)
+gr_dfBiasAwareness &lt;- c(df$preTool_biasAwareness, df$postTool_biasAwareness)
+gr_dfMorality &lt;- c(df$preTool_morality, df$postTool_morality)
+gr_dfValCommitment &lt;- c(df$preTool_valueCommitment, df$postTool_valueCommitment)</code></pre>
 </div>
 
 
