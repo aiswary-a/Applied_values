@@ -3,9 +3,9 @@ title: "Analysing Results of Questionnaire"
 author: "aiswary-a"
 date: "`r format(Sys.Date(), '%Y-%m-%d')`"
 output: 
-  pdf_document:
-    toc: TRUE
   html_document:
+    toc: TRUE
+  pdf_document:
     toc: TRUE
 ---
 
@@ -113,7 +113,7 @@ groupPairs <- list(
 ## 1.1. Sample Size
 ```{r}
 
-print(paste("N =", nrow(df)))
+cat("N =", nrow(df))
 
 ```
 
@@ -291,6 +291,12 @@ for (pair in groupPairs) {
 
 # 3. Unused Code I'm Too Paranoid to Delete
 ```{r, message = FALSE}
+
+# pasting sample size
+### this doesn't even need to be saved, at this point idk
+print(paste("N =", nrow(df)))
+
+# - - - -
 
 # making all text in df lowercase
 df <- df %>%

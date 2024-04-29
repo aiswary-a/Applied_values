@@ -11,7 +11,7 @@
 
 <meta name="author" content="aiswary-a" />
 
-<meta name="date" content="2024-04-28" />
+<meta name="date" content="2024-04-29" />
 
 <title>Analysing Results of Questionnaire</title>
 
@@ -352,17 +352,60 @@ display: none;
 
 <h1 class="title toc-ignore">Analysing Results of Questionnaire</h1>
 <h4 class="author">aiswary-a</h4>
-<h4 class="date">2024-04-28</h4>
+<h4 class="date">2024-04-29</h4>
 
 </div>
 
+<div id="TOC">
+<ul>
+<li><a href="#data-prep" id="toc-data-prep">0. Data Prep</a>
+<ul>
+<li><a href="#workspace-prep" id="toc-workspace-prep">0.1. Workspace
+Prep</a></li>
+<li><a href="#cleaning-the-data" id="toc-cleaning-the-data">0.2.
+Cleaning the Data</a></li>
+</ul></li>
+<li><a href="#demographics" id="toc-demographics">1. Demographics</a>
+<ul>
+<li><a href="#sample-size" id="toc-sample-size">1.1. Sample
+Size</a></li>
+<li><a href="#age" id="toc-age">1.2. Age</a></li>
+<li><a href="#gender" id="toc-gender">1.3. Gender</a></li>
+<li><a href="#candidate-testing" id="toc-candidate-testing">1.4.
+Candidate Testing</a></li>
+</ul></li>
+<li><a href="#pre-tool-vs.-post-tool-usage" id="toc-pre-tool-vs.-post-tool-usage">2. Pre-Tool vs. Post-Tool
+Usage</a>
+<ul>
+<li><a href="#checking-assumptions" id="toc-checking-assumptions">2.1.
+Checking Assumptions</a>
+<ul>
+<li><a href="#a.-normality" id="toc-a.-normality">a. Normality</a></li>
+<li><a href="#b.-homogeneity-of-variance" id="toc-b.-homogeneity-of-variance">b. Homogeneity of Variance</a></li>
+</ul></li>
+<li><a href="#stat.-testing" id="toc-stat.-testing">2.2. Stat.
+Testing!</a>
+<ul>
+<li><a href="#a.-paired-t-test" id="toc-a.-paired-t-test">a. Paired
+t-Test</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#unused-code-im-too-paranoid-to-delete" id="toc-unused-code-im-too-paranoid-to-delete">3. Unused Code I’m Too
+Paranoid to Delete</a></li>
+</ul>
+</div>
 
+<div id="data-prep" class="section level1">
+<h1>0. Data Prep</h1>
+<div id="workspace-prep" class="section level2">
+<h2>0.1. Workspace Prep</h2>
 <pre class="r"><code># loading libraries
 library(pacman)
 pacman::p_load(tidyverse,
                car) # for accessing Levene&#39;s test</code></pre>
-<div id="cleaning-the-data-general-data-prep" class="section level2">
-<h2>0. Cleaning the Data + General Data Prep</h2>
+</div>
+<div id="cleaning-the-data" class="section level2">
+<h2>0.2. Cleaning the Data</h2>
 <pre class="r"><code># insert CSV
 df &lt;-
   read_csv(
@@ -433,11 +476,18 @@ groupPairs &lt;- list(
   c(&quot;preTool_valueCommitment&quot;, &quot;postTool_valueCommitment&quot;)
 )</code></pre>
 </div>
-<div id="demographics" class="section level2">
-<h2>1. Demographics</h2>
-<pre class="r"><code>print(paste(&quot;N =&quot;, nrow(df)))</code></pre>
-<pre><code>## [1] &quot;N = 16&quot;</code></pre>
+</div>
+<div id="demographics" class="section level1">
+<h1>1. Demographics</h1>
+<div id="sample-size" class="section level2">
+<h2>1.1. Sample Size</h2>
+<pre class="r"><code>cat(&quot;N =&quot;, nrow(df))</code></pre>
+<pre><code>## N = 16</code></pre>
+</div>
+<div id="age" class="section level2">
+<h2>1.2. Age</h2>
 <pre class="r"><code># age distribution
+
 stats_dfAge &lt;- df %&gt;%
   summarise(mean = mean(age), sd = sd(age)) # insert age column
 
@@ -445,6 +495,9 @@ print(paste(&quot;The mean age:&quot;, round(stats_dfAge$mean, digits = 3)))</co
 <pre><code>## [1] &quot;The mean age: 28.438&quot;</code></pre>
 <pre class="r"><code>print(paste(&quot;The SD of the age:&quot;, round(stats_dfAge$sd, digits = 3)))</code></pre>
 <pre><code>## [1] &quot;The SD of the age: 14.278&quot;</code></pre>
+</div>
+<div id="gender" class="section level2">
+<h2>1.3. Gender</h2>
 <pre class="r"><code># gender distribution
 stats_dfGender &lt;- df %&gt;% 
   count(gender) # insert gender column
@@ -453,12 +506,21 @@ print(paste(&quot;The gender distribution of the sample:&quot;, stats_dfGender))
 <pre><code>## [1] &quot;The gender distribution of the sample: c(\&quot;female\&quot;, \&quot;male\&quot;)&quot;
 ## [2] &quot;The gender distribution of the sample: c(9, 7)&quot;</code></pre>
 </div>
-<div id="pre-tool-vs.-post-tool-usage" class="section level2">
-<h2>2. Pre-Tool vs. Post-Tool Usage</h2>
-<div id="checking-assumptions" class="section level3">
-<h3>2.1. Checking Assumptions</h3>
-<div id="a.-normality" class="section level4">
-<h4>a. Normality</h4>
+<div id="candidate-testing" class="section level2">
+<h2>1.4. Candidate Testing</h2>
+<pre class="r"><code># Past Usage?
+### [insert code here]
+
+# Future Usage?
+### [insert code here]</code></pre>
+</div>
+</div>
+<div id="pre-tool-vs.-post-tool-usage" class="section level1">
+<h1>2. Pre-Tool vs. Post-Tool Usage</h1>
+<div id="checking-assumptions" class="section level2">
+<h2>2.1. Checking Assumptions</h2>
+<div id="a.-normality" class="section level3">
+<h3>a. Normality</h3>
 <pre class="r"><code># Shapiro-Wilk test for Normality!
 
 stat_nResults &lt;- list() # an empty list to store the results
@@ -571,7 +633,6 @@ for (i in seq_along(groupSingles)) {
 ## 
 ## Fail to reject null hypothesis that data significantly differs from a normal distribution</code></pre>
 </div>
-</div>
 <div id="b.-homogeneity-of-variance" class="section level3">
 <h3>b. Homogeneity of Variance</h3>
 <pre class="r"><code># Levene&#39;s test for homoscedasticity (homogeneity of variance)
@@ -649,10 +710,11 @@ for (pair in groupPairs) {
 ##       11               
 ## Fail to reject null hypothesis that there is no significant difference between the groups</code></pre>
 </div>
-<div id="stat.-testing" class="section level3">
-<h3>2.2 Stat. Testing!</h3>
-<div id="a.-paired-t-test" class="section level4">
-<h4>a. Paired t-Test</h4>
+</div>
+<div id="stat.-testing" class="section level2">
+<h2>2.2. Stat. Testing!</h2>
+<div id="a.-paired-t-test" class="section level3">
+<h3>a. Paired t-Test</h3>
 <pre class="r"><code># paired t-Tests comparing pre-tool and post-tool usage !
 
 stat_tResults &lt;- list() # empty list to store the results
@@ -747,9 +809,15 @@ for (pair in groupPairs) {
 </div>
 </div>
 </div>
-<div id="unused-code-im-too-paranoid-to-delete" class="section level2">
-<h2>Unused Code I’m Too Paranoid to Delete</h2>
-<pre class="r"><code># making all text in df lowercase
+<div id="unused-code-im-too-paranoid-to-delete" class="section level1">
+<h1>3. Unused Code I’m Too Paranoid to Delete</h1>
+<pre class="r"><code># pasting sample size
+### this doesn&#39;t even need to be saved, at this point idk
+print(paste(&quot;N =&quot;, nrow(df)))</code></pre>
+<pre><code>## [1] &quot;N = 16&quot;</code></pre>
+<pre class="r"><code># - - - -
+
+# making all text in df lowercase
 df &lt;- df %&gt;%
   mutate(
     vote_eligibility = tolower(vote_eligibility),
