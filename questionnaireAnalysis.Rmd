@@ -21,7 +21,8 @@ knitr::opts_chunk$set(echo = TRUE)
 # loading libraries
 library(pacman)
 pacman::p_load(tidyverse,
-               car) # for accessing Levene's test
+               car, # for accessing Levene's test
+               patchwork)
 
 ```
 
@@ -105,6 +106,35 @@ groupPairs <- list(
   c("preTool_morality", "postTool_morality"),
   c("preTool_valueCommitment", "postTool_valueCommitment")
 )
+
+# group pairings for plots!
+gr_dfBiasPerception <- c(df$preTool_biasPerception,df$postTool_biasPerception)
+grPlot_dfBiasPerception <- data.frame(
+  measure = c(df$preTool_biasPerception, df$preTool_biasPerception),
+  group = c("Pre-Tool BP", "Post-Tool BP")
+)
+grPlot_dfBiasPerception <- na.omit(grPlot_dfBiasPerception)
+
+gr_dfBiasAwareness <- c(df$preTool_biasAwareness, df$postTool_biasAwareness)
+grPlot_dfBiasAwareness <- data.frame(
+  measure = c(df$preTool_biasAwareness, df$postTool_biasAwareness),
+  group = c("Pre-Tool BA", "Post-Tool BA")
+)
+grPlot_dfBiasAwareness <- na.omit(grPlot_dfBiasAwareness)
+
+gr_dfMorality <- c(df$preTool_morality, df$postTool_morality)
+grPlot_dfMorality <- data.frame(
+  measure = c(df$preTool_morality, df$postTool_morality),
+  group = c("Pre-Tool M", "Post-Tool M")
+)
+grPlot_dfMorality <- na.omit(grPlot_dfMorality)
+
+gr_dfValCommitment <- c(df$preTool_valueCommitment, df$postTool_valueCommitment)
+grPlot_dfValCommitment <- data.frame(
+  measure = c(df$preTool_valueCommitment, df$postTool_valueCommitment),
+  group = c("Pre-Tool VC", "Post-Tool VC")
+)
+grPlot_dfValCommitment <- na.omit(grPlot_dfValCommitment)
 
 ```
 
@@ -288,6 +318,63 @@ for (pair in groupPairs) {
 
 ```
 
+## 2.2. Graphing
+```{r}
+
+# pre-tool vs. post tool usage -- bias perception (BP)
+compHisto_dfBiasPerception <- grPlot_dfBiasPerception %>%
+  ggplot(aes(x = measure, fill = group)) +
+  geom_histogram(position = "identity",
+                 alpha = 0.5,
+                 bins = 10) +
+  labs(title = "Pre- vs. Post-Tool Self-Scores of Bias Perception (BP)",
+       x = "Self-Score (1 - 10) of Own Bias Perception", y = "Frequency") +
+  scale_fill_manual(values = c("Pre-Tool BP" = "blue", "Post-Tool BP" = "red")) +
+  theme_minimal()
+compHisto_dfBiasPerception
+
+# pre-tool vs. post tool usage -- bias awareness (BA)
+compHisto_dfBiasAwareness <- grPlot_dfBiasAwareness %>%
+  ggplot(aes(x = measure, fill = group)) +
+  geom_histogram(position = "identity",
+                 alpha = 0.5,
+                 bins = 10) +
+  labs(title = "Pre- vs. Post-Tool Self-Scores of Bias Awareness",
+       x = "Self-Score (1 - 10) of Own Bias Awareness (BA)", y = "Frequency") +
+  scale_fill_manual(values = c("Pre-Tool BA" = "blue", "Post-Tool BA" = "red")) +
+  theme_minimal()
+compHisto_dfBiasAwareness
+
+# pre-tool vs. post tool usage -- morality (M)
+compHisto_dfMorality <- grPlot_dfMorality %>%
+  ggplot(aes(x = measure, fill = group)) +
+  geom_histogram(position = "identity",
+                 alpha = 0.5,
+                 bins = 10) +
+  labs(title = "Pre- vs. Post-Tool Self-Scores of Morality",
+       x = "Self-Score (1 - 10) of Own Morality (M)", y = "Frequency") +
+  scale_fill_manual(values = c("Pre-Tool M" = "blue", "Post-Tool M" = "red")) +
+  theme_minimal()
+compHisto_dfMorality
+
+# pre-tool vs. post tool usage -- value commitment (VC)
+compHisto_dfValCommitment <- grPlot_dfValCommitment %>%
+  ggplot(aes(x = measure, fill = group)) +
+  geom_histogram(position = "identity",
+                 alpha = 0.5,
+                 bins = 10) +
+  labs(title = "Pre- vs. Post-Tool Self-Scores of Value Commitment ",
+       x = "Self-Score (1 - 10) of Own Value Commitment (VC)", y = "Frequency") +
+  scale_fill_manual(values = c("Pre-Tool VC" = "blue", "Post-Tool VC" = "red")) +
+  theme_minimal()
+compHisto_dfValCommitment
+
+plots_preXpost <- compHisto_dfBiasAwareness / compHisto_dfBiasAwareness / compHisto_dfMorality / compHisto_dfValCommitment
+
+plots_preXpost
+
+```
+
 
 # 3. Unused Code I'm Too Paranoid to Delete
 ```{r, message = FALSE}
@@ -314,11 +401,6 @@ df <- df %>%
 
 # - - - - 
 
-# group pairings
-gr_dfBiasPerception <- c(df$preTool_biasPerception,df$postTool_biasPerception)
-gr_dfBiasAwareness <- c(df$preTool_biasAwareness, df$postTool_biasAwareness)
-gr_dfMorality <- c(df$preTool_morality, df$postTool_morality)
-gr_dfValCommitment <- c(df$preTool_valueCommitment, df$postTool_valueCommitment)
 
 ```
 
