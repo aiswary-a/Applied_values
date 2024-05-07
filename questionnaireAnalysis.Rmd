@@ -22,7 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(pacman)
 pacman::p_load(tidyverse,
                car, # for accessing Levene's test
-               patchwork)
+               patchwork) # for organising graphs
 
 ```
 
@@ -33,7 +33,7 @@ pacman::p_load(tidyverse,
 # insert CSV
 df <-
   read_csv(
-    "C:/Users/aisro/Desktop/UNI/BSc CogSci - 2nd Sem/Applied/VSCode + Git/Form Responses/CogSci_Applied_Responses - Form responses_USINGFORCODEPREP_1.csv"
+    "C:/Users/aisro/Desktop/UNI/BSc CogSci - 2nd Sem/Applied/VSCode + Git/Form Responses/CogSci_Applied_Responses - Form responses 1_maybeee.csv"
   ) # to be updated with final data, this is just a placeholder
 
 # renaming the df columns
@@ -79,6 +79,9 @@ df <- df[df$timestamp != "16/04/2024 14:07:03",]
 df <- df %>% 
   mutate_if(~ !is.numeric(.), tolower)
 
+# getting rid of 'accidental' double response (participant age 31)
+### need to somehow fuse certain answers together for certain questions.... hmmmmm...
+
 ```
 
 
@@ -89,52 +92,58 @@ df <- df %>%
 
 # vars. of interest :))
 groupSingles <- c(
-  "preTool_biasPerception",
-  "postTool_biasPerception",
-  "preTool_biasAwareness",
-  "postTool_biasAwareness",
-  "preTool_morality",
-  "postTool_morality",
-  "preTool_valueCommitment",
-  "postTool_valueCommitment"
+  "preTool_biasPerception", ## Pre-Tool BP
+  "postTool_biasPerception", ## Post-Tool BP
+  "preTool_biasAwareness", ## Pre-Tool BA
+  "postTool_biasAwareness", ## Post-Tool BA
+  "preTool_morality", ## Pre-Tool M
+  "postTool_morality", ## Post-Tool M
+  "preTool_valueCommitment", ## Pre-Tool VC
+  "postTool_valueCommitment" ## Post-Tool VC
 )
 
-# defining the group pairings
+# defining the group pairings for the loops
 groupPairs <- list(
-  c("preTool_biasPerception", "postTool_biasPerception"),
-  c("preTool_biasAwareness", "postTool_biasAwareness"),
-  c("preTool_morality", "postTool_morality"),
-  c("preTool_valueCommitment", "postTool_valueCommitment")
+  c("preTool_biasPerception", "postTool_biasPerception"), ## BP
+  c("preTool_biasAwareness", "postTool_biasAwareness"), ## BA
+  c("preTool_morality", "postTool_morality"), ## M
+  c("preTool_valueCommitment", "postTool_valueCommitment") ## VC
 )
+
+?data.frame
 
 # group pairings for plots!
+## Bias Perception Group
 gr_dfBiasPerception <- c(df$preTool_biasPerception,df$postTool_biasPerception)
 grPlot_dfBiasPerception <- data.frame(
-  measure = c(df$preTool_biasPerception, df$preTool_biasPerception),
+  measure = c(df$preTool_biasPerception, df$postTool_biasPerception),
   group = c("Pre-Tool BP", "Post-Tool BP")
 )
-grPlot_dfBiasPerception <- na.omit(grPlot_dfBiasPerception)
+grPlot_dfBiasPerception <- na.omit(grPlot_dfBiasPerception) # skipping any na's
 
+## Bias Awareness Group
 gr_dfBiasAwareness <- c(df$preTool_biasAwareness, df$postTool_biasAwareness)
 grPlot_dfBiasAwareness <- data.frame(
   measure = c(df$preTool_biasAwareness, df$postTool_biasAwareness),
   group = c("Pre-Tool BA", "Post-Tool BA")
 )
-grPlot_dfBiasAwareness <- na.omit(grPlot_dfBiasAwareness)
+grPlot_dfBiasAwareness <- na.omit(grPlot_dfBiasAwareness) # skipping any na's
 
+## Morality Level Group
 gr_dfMorality <- c(df$preTool_morality, df$postTool_morality)
 grPlot_dfMorality <- data.frame(
   measure = c(df$preTool_morality, df$postTool_morality),
   group = c("Pre-Tool M", "Post-Tool M")
 )
-grPlot_dfMorality <- na.omit(grPlot_dfMorality)
+grPlot_dfMorality <- na.omit(grPlot_dfMorality) # skipping any na's
 
+## Value Commitment Level Group
 gr_dfValCommitment <- c(df$preTool_valueCommitment, df$postTool_valueCommitment)
 grPlot_dfValCommitment <- data.frame(
   measure = c(df$preTool_valueCommitment, df$postTool_valueCommitment),
   group = c("Pre-Tool VC", "Post-Tool VC")
 )
-grPlot_dfValCommitment <- na.omit(grPlot_dfValCommitment)
+grPlot_dfValCommitment <- na.omit(grPlot_dfValCommitment) # skipping any na's
 
 ```
 
@@ -317,6 +326,14 @@ for (pair in groupPairs) {
 }
 
 ```
+
+### b. Non-Parametric Paired t-test (?)
+```{r}
+
+# non-parametric stuff for groups that don't meet parametric assumptions
+
+```
+
 
 ## 2.2. Graphing
 ```{r}
