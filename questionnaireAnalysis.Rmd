@@ -33,7 +33,7 @@ pacman::p_load(tidyverse,
 # insert CSV
 df <-
   read_csv(
-    "C:/Users/aisro/Desktop/UNI/BSc CogSci - 2nd Sem/Applied/VSCode + Git/Form Responses/CogSci_Applied_Responses - Form responses 1_maybeee.csv"
+    "C:/Users/aisro/Desktop/UNI/BSc CogSci - 2nd Sem/Applied/VSCode + Git/Form Responses/CogSci_Applied_Responses - Form responses_USINGFORCODEPREP_2.csv"
   ) # to be updated with final data, this is just a placeholder
 
 # renaming the df columns
@@ -75,12 +75,62 @@ df <- df %>%
 # removing first (test) row
 df <- df[df$timestamp != "16/04/2024 14:07:03",]
 
+# fusing the duplicated row
+merged_row <-
+  c(
+    "01/05/2024 16:26:10",
+    31,
+    "Yes",
+    7,
+    5,
+    7,
+    6,
+    3,
+    7,
+    6,
+    6,
+    "it was fun to go through the scenarios! I think the value descriptions are a bit abstract and hard to grasp, and my ranking had a lot of 'noise' as a function of that. perhaps a few examples, or 'simpler', more concrete value headings could help? perhaps more values would also be great. with respect to questionnaire questions, i think questions about biases were also a bit underspecified (what does it mean to be 'biased', in this context?)",
+    8,
+    8,
+    8,
+    " ",
+    "Yes",
+    "Yes",
+    " ",
+    " ",
+    "",
+    "Female"
+  )
+
+# now adding the merged_row to the df
+df <- rbind(df, merged_row)
+
+# getting rid of 'accidental' double response (participant age 31)
+df <- df[-c(17, 18), ]
+
 # ID'ing non-numeric columnsss and making those all lowercase!
 df <- df %>% 
   mutate_if(~ !is.numeric(.), tolower)
 
-# getting rid of 'accidental' double response (participant age 31)
-### need to somehow fuse certain answers together for certain questions.... hmmmmm...
+# making sure everything that needs to be numeric IS NUMERIC!!!
+columns_to_convert <- c(
+  "age",
+  "preTool_biasPerception", ## Pre-Tool BP
+  "postTool_biasPerception", ## Post-Tool BP
+  "preTool_biasAwareness", ## Pre-Tool BA
+  "postTool_biasAwareness", ## Post-Tool BA
+  "preTool_morality", ## Pre-Tool M
+  "postTool_morality", ## Post-Tool M
+  "preTool_valueCommitment", ## Pre-Tool VC
+  "postTool_valueCommitment", ## Post-Tool VC
+  "num_decision_enjoyment", ## tool engagement level
+  "num_likely_to_recommend", # how likely to recommend
+  "num_ranking_agreement" # ranking agreement level
+)  
+
+# Convert selected columns to numeric
+df <- df %>%
+  mutate(across(all_of(columns_to_convert), as.numeric))
 
 ```
 
@@ -89,6 +139,17 @@ df <- df %>%
 ```{r}
 
 # groups for stat tests!
+
+groupSingles <- c(
+  "preTool_biasPerception", ## Pre-Tool BP
+  "postTool_biasPerception", ## Post-Tool BP
+  "preTool_biasAwareness", ## Pre-Tool BA
+  "postTool_biasAwareness", ## Post-Tool BA
+  "preTool_morality", ## Pre-Tool M
+  "postTool_morality", ## Post-Tool M
+  "preTool_valueCommitment", ## Pre-Tool VC
+  "postTool_valueCommitment" ## Post-Tool VC
+)
 
 # vars. of interest :))
 groupSingles <- c(
@@ -109,8 +170,6 @@ groupPairs <- list(
   c("preTool_morality", "postTool_morality"), ## M
   c("preTool_valueCommitment", "postTool_valueCommitment") ## VC
 )
-
-?data.frame
 
 # group pairings for plots!
 ## Bias Perception Group
@@ -160,6 +219,8 @@ cat("N =", nrow(df))
 ```{r}
 
 # age distribution
+
+df$age <- as.numeric(df$age) # just making sure
 
 stats_dfAge <- df %>%
   summarise(mean = mean(age), sd = sd(age)) # insert age column
@@ -417,7 +478,6 @@ df <- df %>%
   )
 
 # - - - - 
-
 
 ```
 
