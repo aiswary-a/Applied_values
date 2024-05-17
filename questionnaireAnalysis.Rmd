@@ -389,11 +389,45 @@ for (pair in groupPairs) {
 ```
 
 ### b. Non-Parametric Paired t-test (?)
-```{r}
+```{r, warning = FALSE}
 
 # non-parametric stuff for groups that don't meet parametric assumptions
+## Wilcoxon Signed-Rank t-Tests comparing pre-tool and post-tool usage !
+
+stat_wResults <- list() # empty list to store the results
+
+# Paired t-Test for-loop, iterating through each indexed column
+for (pair in groupPairs) {
+  
+  # extracting the group pairs and performing numeric conversions where necessary
+  group1 <- as.numeric(c(df[[pair[1]]]))
+  group2 <- as.numeric(c(df[[pair[2]]]))
+  
+  # perfomring the paired t-test!
+  stat_wResults <- wilcox.test(group1, group2, paired = TRUE,
+                          alternative = "two.sided")
+  
+  # storing the result in the pre-established list!
+  test_name <- paste("Wilcoxon Signed-Rank t-test between", pair[1], "and", pair[2])
+  stat_wResults[[test_name]] <- stat_wResults
+  
+  # seeing the result of our lovely test!
+  cat(test_name, ":\n")
+  print(stat_wResults)
+  
+  # performing the hypothesis test using results!
+  if (!is.null(stat_wResults$p.value[1]) && stat_wResults$p.value[1] > 0.05) {
+    cat("Fail to reject null hypothesis that there is no significant difference between the groups\n\n")
+  } else if (!is.null(stat_tResults$p.value[1]) && stat_tResults$p.value[1] <= 0.05) {
+    cat("Reject the null hypothesis that there is no significant difference between the groups\n\n")
+  } else {
+    cat("Unable to compute p-value for the test.\n\n")
+  }
+}
 
 ```
+
+* okay... these aren't looking great :,) -- hmmmmmm I'm not sure how to deal with this,, maybe I'll check for outliers to see if there's anything we can salvage buuuuut yeahh..
 
 
 ## 2.2. Graphing
@@ -478,6 +512,12 @@ df <- df %>%
   )
 
 # - - - - 
+
+```
+```{r}
+
+## trying out non-parametric tests on the data since it doesn't meet assumptions :((
+?kruskal.test
 
 ```
 
