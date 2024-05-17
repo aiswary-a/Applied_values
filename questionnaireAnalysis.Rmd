@@ -63,7 +63,8 @@ renaming_dfCols <-
     "char_comment_tool_design",
     "char_comment_other",
     "gender",
-    "empty"
+    "empty",
+    show_col_types = FALSE
   )
 
 colnames(df) <- renaming_dfCols
@@ -130,7 +131,7 @@ columns_to_convert <- c(
 
 # Convert selected columns to numeric
 df <- df %>%
-  mutate(across(all_of(columns_to_convert), as.numeric))
+  mutate(across(all_of(columns_to_convert), as.numeric), show_col_types = FALSE)
 
 ```
 
@@ -241,14 +242,48 @@ print(paste("The gender distribution of the sample:", stats_dfGender))
 
 ```
 
-## 1.4. Candidate Testing
+## 1.4. Kandidattest Usage Review (Past and Future)
 ```{r}
 
 # Past Usage?
-### [insert code here]
+##unique(df$char_past_candidate_test)
+
+## "yes"
+count_kandTestPast_yes <- matrixStats::count(df$char_past_candidate_test == "yes")
+cat(
+  "No. of participants who have used some sort of Kandidattest to inform themselves about Danish Election choices in the past:",
+  count_kandTestPast_yes,
+  "\n\n"
+)
+
+## "no"
+count_kandTestPast_no <- matrixStats::count(df$char_past_candidate_test == "no")
+cat(
+  "No. of participants who have NOT used some sort of Kandidattest to inform themselves about Danish Election choices in the past:",
+  count_kandTestPast_no,
+  "\n\n"
+)
+
+# - - - -
 
 # Future Usage?
-### [insert code here]
+##unique(df$char_future_candidate_test)
+
+## "yes"
+count_kandTestFuture_yes <- matrixStats::count(df$char_future_candidate_test == "yes")
+cat(
+  "No. of participants who do plan to use some sort of Kandidattest to inform themselves about Danish Election choices:",
+  count_kandTestFuture_yes,
+  "\n\n"
+)
+
+## "no"
+count_kandTestFuture_no <- matrixStats::count(df$char_future_candidate_test == "no")
+cat(
+  "No. of participants who do NOT plan on using any Kandidattest to inform themselves about Danish Election choices:",
+  count_kandTestFuture_no,
+  "\n\n"
+)
 
 ```
 
@@ -428,6 +463,7 @@ for (pair in groupPairs) {
 ```
 
 * okay... these aren't looking great :,) -- hmmmmmm I'm not sure how to deal with this,, maybe I'll check for outliers to see if there's anything we can salvage buuuuut yeahh..
+* I'll also see if I can get some more people to try it out..
 
 
 ## 2.2. Graphing
@@ -512,12 +548,6 @@ df <- df %>%
   )
 
 # - - - - 
-
-```
-```{r}
-
-## trying out non-parametric tests on the data since it doesn't meet assumptions :((
-?kruskal.test
 
 ```
 
